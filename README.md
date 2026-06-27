@@ -1,7 +1,10 @@
-# 🛠️ 반도체 공정 센서 데이터 기반 Defect 원인 추적 및 수율(Yield) 예측 시스템
+# 🛠️ 반도체 공정 내 극단적 데이터 불균형(Class Imbalance) 해결 및 DMI 관점 센서 차원 축소 기반 수율(Yield) 예측 & Defect 역추적 프로젝트
 
 > **Target JD**: 삼성전자 DS부문 메모리사업부 반도체공정기술  
-> **JD 키워드 매핑**: 빅데이터 분석, Defect 개선 Engineering, 공정/설비 자동화, 수율 예측, Python 통계 Tool
+> **JD 키워드 매핑**: 빅데이터 분석, Defect 개선 Engineering, 공정/설비 자동화, 수율 예측, Python 통계 Tool  
+> **Dataset**: UCI SECOM | 590 sensors × 1,567 wafers | Defect Rate 6.6%
+
+![Python](https://img.shields.io/badge/Python-3.11-blue) ![XGBoost](https://img.shields.io/badge/Model-XGBoost-orange) ![SMOTE](https://img.shields.io/badge/Sampling-SMOTE-green) ![Status](https://img.shields.io/badge/Status-In_Progress-yellow)
 
 ---
 
@@ -78,11 +81,12 @@ Raw Data (590 sensors)
 
 ## 4. 실험 결과 비교
 
-| 실험 | 알고리즘 | 전처리 기법 | Recall | F1 | 비고 |
-|------|---------|-----------|--------|-----|------|
-| 01 | XGBoost Baseline | 결측치 중앙값 대체 | 0.12 | 0.21 | 불균형 미처리 → 불량 검출 실패 |
-| 02 | XGBoost + SMOTE | 결측치 제거 + SMOTE | 0.67 | 0.22 | 불량 검출 개선, Precision 낮음 |
-| 03 | **XGBoost + SMOTE + Feature Selection** | **KNN Imputer + Variance Threshold + Top 30** | **0.67** | **0.22** | **Recall 최적화 모델 (scale_pos_weight=10)** |
+| 실험 | 알고리즘 | 전처리 기법 | Recall | F1 | AUC-PR | 비고 |
+|------|---------|-----------|--------|-----|--------|------|
+| 01 | XGBoost Baseline | 결측치 중앙값 대체 | 0.12 | 0.21 | - | 불균형 미처리 → 불량 검출 실패 |
+| 02 | XGBoost + SMOTE | 결측치 제거 + SMOTE | 0.67 | 0.22 | - | 불량 검출 개선, Precision 낮음 |
+| 03 | **XGBoost + SMOTE + Feature Selection** | **KNN Imputer + Variance Threshold + Top 30** | **0.67** | **0.22** | - | **현재 최적 모델 (scale_pos_weight=10)** |
+| 04 | LightGBM + SMOTE | KNN Imputer + Variance Threshold + Top 30 | - | - | - | 🔄 진행 예정 |
 
 > **핵심 인사이트**: CV Recall 0.994 vs Test Recall 0.67 → SMOTE 기반 과적합(Overfitting) 확인.  
 > 개선 방향: LightGBM + Threshold 튜닝 + StratifiedKFold 적용 예정.
@@ -148,7 +152,21 @@ pip install pandas numpy matplotlib seaborn scikit-learn xgboost imbalanced-lear
 
 ## 9. 다음 단계 (개선 계획)
 
-- [ ] LightGBM 모델 비교 실험
+- [ ] LightGBM 모델 비교 실험 (실험 04)
 - [ ] Prediction Threshold 튜닝으로 Recall/Precision 트레이드오프 최적화
 - [ ] SPC 관리도(Control Chart) 연동 — 핵심 센서 실시간 모니터링
 - [ ] Streamlit 기반 공정 이상 감지 대시보드 구현
+
+---
+
+## 10. Git 커밋 컨벤션
+
+이 프로젝트는 아래 컨벤션으로 커밋 로그를 관리한다.
+
+| 태그 | 용도 | 예시 |
+|------|------|------|
+| `feat` | 새 분석 기능 추가 | `feat: add SMOTE sampling to solve class imbalance` |
+| `refactor` | 모델/코드 개선 | `refactor: optimize XGBoost hyperparameters using GridSearchCV` |
+| `docs` | README / 문서 수정 | `docs: update README with performance metric table` |
+| `fix` | 버그/오류 수정 | `fix: resolve KNN imputer memory overflow on full dataset` |
+| `exp` | 실험 추가 | `exp: add LightGBM baseline experiment` |
